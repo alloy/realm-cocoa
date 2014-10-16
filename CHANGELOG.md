@@ -24,6 +24,8 @@
 * Added method `deleteObject:` on `RLMMigration` which allows object deletion during migrations.
 * Updating to core library version 0.85.0.
 * Implement `objectsWhere:` and `objectsWithPredicate:` for array properties.
+* Make creating `RLMRealm` instances on background threads when an instance
+  exists on another thread take a fifth of the time.
 
 ### Bugfixes
 
