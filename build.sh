@@ -91,6 +91,24 @@ xcrealm() {
     xc "-project $PROJECT $@"
 }
 
+build_fat() {
+    target="$1"
+    build_prefix="$2"
+    out_dir="$3"
+
+    xcrealm "-scheme '$target' -configuration Release -sdk iphoneos"
+    xcrealm "-scheme '$target' -configuration Release -sdk iphonesimulator"
+
+    srcdir="build/DerivedData/Realm/Build/Products/Release-dynamic"
+    mkdir -p build/$out_dir
+    rm -rf build/$out_dir/Realm.framework
+    cp -R $build_prefix-iphoneos/Realm.framework build/$out_dir
+    if [ -d build/$out_dir/Realm.framework/Modules/Realm.swfitmodule ]; then
+        cp $build_prefix-iphonesimulator/Realm.framework/Modules/Realm.swiftmodule/* build/$out_dir/Realm.framework/Modules/Realm.swiftmodule/
+    fi
+    xcrun lipo -create "$build_prefix-iphonesimulator/Realm.framework/Realm" "$build_prefix-iphoneos/Realm.framework/Realm" -output "build/$out_dir/Realm.framework/Realm"
+}
+
 ######################################
 # Device Test Helper
 ######################################
@@ -219,20 +237,13 @@ case "$COMMAND" in
         ;;
 
     "ios")
+        build_fat iOS build/DerivedData/Realm/Build/Products/Release ios
         xcrealm "-scheme iOS -configuration Release-Combined"
         exit 0
         ;;
 
     "ios-dynamic")
-        xcrealm "-scheme 'iOS 8' -configuration Release -sdk iphoneos"
-        xcrealm "-scheme 'iOS 8' -configuration Release -sdk iphonesimulator"
-
-        srcdir="build/DerivedData/Realm/Build/Products/Release-dynamic"
-        mkdir -p build/ios-dynamic
-        rm -rf build/ios-dynamic/Realm.framework
-        cp -R $srcdir-iphoneos/Realm.framework build/ios-dynamic
-        cp $srcdir-iphonesimulator/Realm.framework/Modules/Realm.swiftmodule/* build/ios-dynamic/Realm.framework/Modules/Realm.swiftmodule/
-        xcrun lipo -create "$srcdir-iphonesimulator/Realm.framework/Realm" "$srcdir-iphoneos/Realm.framework/Realm" -output "build/ios-dynamic/Realm.framework/Realm"
+        build_fat 'iOS 8' build/DerivedData/Realm/Build/Products/Release-dynamic ios-dynamic
         exit 0
         ;;
 
